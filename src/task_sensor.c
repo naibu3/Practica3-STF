@@ -98,8 +98,8 @@ SYSTEM_TASK(TASK_SENSOR)
 	float v2 = 20.0;
 	float v3 = 20.0;
 
-	mensaje msg_monitor;
-	msg_monitor.uid = ID_SENSOR;
+	mensaje msg;
+	msg.uid = ID_SENSOR;
 
 	//mensaje msg_comprobador;
 	//msg_comprobador.uid = ID_SENSOR;
@@ -109,8 +109,6 @@ SYSTEM_TASK(TASK_SENSOR)
 	therm_config( &t1, ADC_CHANNEL_6, -1);
 	therm_config( &t2, ADC_CHANNEL_5, -1);
 	therm_config( &t3, ADC_CHANNEL_0, -1);
-
-	int counter=0;
 
 	// Loop
 	TASK_LOOP()
@@ -122,18 +120,18 @@ SYSTEM_TASK(TASK_SENSOR)
 		{	
 			// lectura del sensor 1
 			v1 = therm_read_t(t1);
-			msg_monitor.s1=v1;
+			msg.s1=v1;
 			ESP_LOGI(TAG, "valor medido de s1 (pre buffer): %.5f", v1);
 
 			// lectura del sensor 2
 			v2 = therm_read_t(t2);
 			ESP_LOGI(TAG, "valor medido de s2 (pre buffer): %.5f", v2);
-			msg_monitor.s2=v2;
+			msg.s2=v2;
 
 			// lectura del sensor 3
 			v3 = therm_read_t(t3);
 			ESP_LOGI(TAG, "valor medido de s3 (pre buffer): %.5f", v3);
-			msg_monitor.s3=v3;
+			msg.s3=v3;
 
 			// Uso del buffer cíclico entre la tarea monitor y sensor. Ver documentación en ESP-IDF
 			// Pide al RingBuffer espacio para escribir un float. 
@@ -148,7 +146,7 @@ SYSTEM_TASK(TASK_SENSOR)
 				// Si xRingbufferSendAcquire tiene éxito, podemos escribir el número de bytes solicitados
 				// en el puntero ptr. El espacio asignado estará bloqueado para su lectura hasta que 
 				// se notifique que se ha completado la escritura
-				memcpy(ptr,&msg_monitor, sizeof(mensaje));
+				memcpy(ptr,&msg, sizeof(mensaje));
 
 				// Se notifica que la escritura ha completado. 
 				xRingbufferSendComplete(*rbuf, ptr);

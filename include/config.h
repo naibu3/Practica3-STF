@@ -64,7 +64,7 @@ typedef struct{
 	float s1;
 	float s2;
 	float s3;
-	float deviation;
+	float media;
 
 } mensaje;
 
@@ -98,5 +98,19 @@ typedef struct
 #define TASK_MONITOR_TIMEOUT_MS 2000 
 // Tamaño de la pila de la tarea
 #define TASK_MONITOR_STACK_SIZE 4096
+
+// VOTADOR
+SYSTEM_TASK(TASK_VOTADOR);
+// definición de los argumentos que requiere la tarea
+typedef struct 
+{
+	RingbufHandle_t* rbuf_read; // puntero al buffer que lee de los sensores
+	RingbufHandle_t* rbuf_write; // puntero al buffer que escribe al monitor
+    // ...
+}task_votador_args_t;
+// Timeout de la tarea (ver system_task_stop)
+#define TASK_VOTADOR_TIMEOUT_MS 2000 
+// Tamaño de la pila de la tarea
+#define TASK_VOTADOR_STACK_SIZE 4096
 
 #endif
