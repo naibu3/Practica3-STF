@@ -50,6 +50,24 @@ enum{
 #define BUFFER_SIZE  2048
 #define BUFFER_TYPE  RINGBUF_TYPE_NOSPLIT
 
+// Configuracion de envio de mensajes
+
+#define ID_SENSOR 0
+#define ID_VOTADOR 1
+
+
+// Estrtuctura para mandar mensajes
+typedef struct{
+
+	uint8_t uid; //ID para identificar el emisor del mensaje
+
+	float s1;
+	float s2;
+	float s3;
+	float deviation;
+
+} mensaje;
+
 // Configuración de las tareas
 
 // SENSOR

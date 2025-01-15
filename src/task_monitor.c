@@ -45,7 +45,13 @@ SYSTEM_TASK(TASK_MONITOR)
 	// variables para reutilizar en el bucle
 	size_t length;
 	void *ptr;
-	float v;
+	mensaje msg;
+	float v1 = 0.0;
+	float v2 = 0.0;
+	float v3 = 0.0;
+	//float deviation = 0.0;
+	//float min_val = 0.0;
+	//float max_val = 0.0;
 
 	// Loop
 	TASK_LOOP()
@@ -61,8 +67,15 @@ SYSTEM_TASK(TASK_MONITOR)
 			// Este código se puede usar para notificar cuántos bytes ha recibido del
 			// sensor a través de la estructura RingBuffer. 
 			//ESP_LOGI(TAG,"Recibidos: %d bytes", length);
-			v = *((float *) ptr);
-			ESP_LOGI(TAG, "T:%.5f", v);
+			msg = *((mensaje *) ptr);
+			
+			if (msg.uid == ID_SENSOR){
+				v1 = msg.s1;
+				v2 = msg.s2;
+				v3 = msg.s3;
+				ESP_LOGI(TAG, "NORMAL_MODE: T1 = %.5f; T2 = %.5f; T3 = %.5f", v1, v2, v3);
+			}
+
 			vRingbufferReturnItem(*rbuf, ptr);
 		} 
 		else 

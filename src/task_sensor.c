@@ -47,6 +47,7 @@
 
 // propias
 #include "config.h"
+#include "term.h"
 
 static const char *TAG = "STF_P1:task_sensor";
 
@@ -61,53 +62,6 @@ static void tmrSampleCallback(void* arg)
 	xSemaphoreGive(semSample);
 }
 
-// ESP32 tiene unidad de conversión analógica digital, que debe configurarse 
-// previamente a las lecturas mediante esta estructura manejador. Se define global
-// porque únicamente usaremos un ADC. Se configura en la tarea antes del loop
-adc_oneshot_unit_handle_t adc_hdlr; 
-
-
-// Funciones de lectura del sensor.
-
-// Se trata de un termistor, un sensor analógico activo (require alimentación)
-// cuya salida es voltaje. El circuito está en la cabecera de este fichero. 
-//
-// Pasos para adquirir un valor: 
-// 1) El ADC del SoC devuelve un valor binario crudo (LSB), que corresponde a un valor
-// de voltaje en la entrada del canal.
-
-// 2) Convertir este valor en voltaje. Para esto, es necesario conocer el número 
-// de bits que tiene el ADC (para conocer el máximo valor binario que
-// se puede obtener) y el voltaje de referencia (el máximo voltaje que es 
-// capaz de medir)
-
-// LSB crudo
-int read_adc() 
-{
-    int raw_value = 0;
-    ESP_ERROR_CHECK(adc_oneshot_read(adc_hdlr, THERMISTOR_ADC_CHANNEL, &raw_value));
-    return raw_value;
-}
-
-// LSB -> V
-// 12 bits -> 2^12 = 4096 -> rango de 0 a 4095. 
-// V de referencia interno del ESP32 -> 3.3V
-#define lsb_to_v(x) (float) ((x) * 3.3f / 4095.0f)
-
-// V -> Temperatura en C
-float v_to_temperature(float v)
-{
-	// resistencia del termistor, obtenida por el voltaje medido en el adc. 
-    float r_ntc = SERIES_RESISTANCE * (3.3 - v) / v;
-
-	// Ecuación de Steinhart-Hart, que relaciona la resistencia que ofrece un material semiconductor 
-	// con la variación de la temperatura en Kelvin, de acuerdo a unos coeficientes que caracterizan
-	// al semiconductor en cuestión (están definidos en config.h) 
-	float t_kelvin = 1.0f / (1.0f / NOMINAL_TEMPERATURE + (1.0f / BETA_COEFFICIENT) * log(r_ntc / NOMINAL_RESISTANCE));
-
-	// Resultado en grados centígrados
-    return(t_kelvin - 273.15f);  
-}
 
 // Tarea SENSOR
 SYSTEM_TASK(TASK_SENSOR)
@@ -121,21 +75,7 @@ SYSTEM_TASK(TASK_SENSOR)
 	uint8_t frequency = ptr_args->freq;
 	uint64_t period_us = 1000000 / frequency;
 
-	// Estructura de datos para configurar la unidad ADC
-    adc_oneshot_unit_init_cfg_t unit_cfg = {
-        .unit_id = THERMISTOR_ADC_UNIT,
-        .clk_src = ADC_RTC_CLK_SRC_DEFAULT,
-    };
-	// Establecimiento de la configuracón en ADC
-    ESP_ERROR_CHECK(adc_oneshot_new_unit(&unit_cfg, &adc_hdlr));
-
-	// Estructura de datos para configurar el canal de la unidad ADC
-    adc_oneshot_chan_cfg_t channel_cfg = {
-        .atten = ADC_ATTEN_DB_11, // Rango de 0 a 3.3V
-        .bitwidth = ADC_BITWIDTH_12, // Resolución de 12 bits
-    };
-	// Establecimiento de la configuración del canal
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc_hdlr, THERMISTOR_ADC_CHANNEL, &channel_cfg));
+	therm_init();
 
 	// Inicializa el semásforo (la estructura del manejador se definió globalmente)
 	semSample = xSemaphoreCreateBinary();
@@ -153,7 +93,24 @@ SYSTEM_TASK(TASK_SENSOR)
 	
 	// variables para reutilizar en el bucle
 	void *ptr;
-	float v;
+
+	float v1 = 20.0;
+	float v2 = 20.0;
+	float v3 = 20.0;
+
+	mensaje msg_monitor;
+	msg_monitor.uid = ID_SENSOR;
+
+	//mensaje msg_comprobador;
+	//msg_comprobador.uid = ID_SENSOR;
+	therm_t t1;
+	therm_t t2;
+	therm_t t3;
+	therm_config( &t1, ADC_CHANNEL_6, -1);
+	therm_config( &t2, ADC_CHANNEL_5, -1);
+	therm_config( &t3, ADC_CHANNEL_0, -1);
+
+	int counter=0;
 
 	// Loop
 	TASK_LOOP()
@@ -163,14 +120,24 @@ SYSTEM_TASK(TASK_SENSOR)
 		// en tareas periódicas cuyo periodo es conocido. 
 		if(xSemaphoreTake(semSample, ((1000/frequency)*1.2)/portTICK_PERIOD_MS))
 		{	
-			// lectura del sensor. Se obtiene el valor en grados centígrados
-			v = v_to_temperature(lsb_to_v(read_adc()));
-			ESP_LOGI(TAG, "valor medido (pre buffer): %f", v);
+			// lectura del sensor 1
+			v1 = therm_read_t(t1);
+			msg_monitor.s1=v1;
+			ESP_LOGI(TAG, "valor medido de s1 (pre buffer): %.5f", v1);
 
+			// lectura del sensor 2
+			v2 = therm_read_t(t2);
+			ESP_LOGI(TAG, "valor medido de s2 (pre buffer): %.5f", v2);
+			msg_monitor.s2=v2;
+
+			// lectura del sensor 3
+			v3 = therm_read_t(t3);
+			ESP_LOGI(TAG, "valor medido de s3 (pre buffer): %.5f", v3);
+			msg_monitor.s3=v3;
 
 			// Uso del buffer cíclico entre la tarea monitor y sensor. Ver documentación en ESP-IDF
 			// Pide al RingBuffer espacio para escribir un float. 
-			if (xRingbufferSendAcquire(*rbuf, &ptr, sizeof(float), pdMS_TO_TICKS(100)) != pdTRUE)
+			if (xRingbufferSendAcquire(*rbuf, &ptr, sizeof(mensaje), pdMS_TO_TICKS(100)) != pdTRUE)
 			{
 				// Si falla la reserva de memoria, notifica la pérdida del dato. Esto ocurre cuando 
 				// una tarea productora es mucho más rápida que la tarea consumidora. Aquí no debe ocurrir.
@@ -181,7 +148,7 @@ SYSTEM_TASK(TASK_SENSOR)
 				// Si xRingbufferSendAcquire tiene éxito, podemos escribir el número de bytes solicitados
 				// en el puntero ptr. El espacio asignado estará bloqueado para su lectura hasta que 
 				// se notifique que se ha completado la escritura
-				memcpy(ptr,&v, sizeof(float));
+				memcpy(ptr,&msg_monitor, sizeof(mensaje));
 
 				// Se notifica que la escritura ha completado. 
 				xRingbufferSendComplete(*rbuf, ptr);
