@@ -109,7 +109,7 @@ void app_main(void)
 			// Crea la tarea votador como un proceso asociado al CORE 1.
 			// Lo que hace la tarea está en task_votador.c
 			ESP_LOGI(TAG, "starting votador task...");
-			task_votador_args_t task_votador_args = {&rbuf_votador, &rbuf_monitor};
+			task_votador_args_t task_votador_args = {&rbuf_votador, &rbuf_monitor, THERM_MASK};
 			system_task_start_in_core(&sys_stf_p1, &task_votador, TASK_VOTADOR, "TASK_VOTADOR", TASK_VOTADOR_STACK_SIZE, &task_votador_args, 0, CORE1);
 			ESP_LOGI(TAG, "Done");
 

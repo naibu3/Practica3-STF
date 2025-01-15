@@ -46,6 +46,8 @@ enum{
 #define NOMINAL_TEMPERATURE 298.15    // 25°C en Kelvin
 #define BETA_COEFFICIENT 3950         // Constante B (ajustar según el termistor)
 
+#define THERM_MASK 0x00FF // Mascara para aplicar a las lecturas
+
 // Configuración del buffer cíclico
 #define BUFFER_SIZE  2048
 #define BUFFER_TYPE  RINGBUF_TYPE_NOSPLIT
@@ -64,7 +66,13 @@ typedef struct{
 	float s1;
 	float s2;
 	float s3;
+
+	uint16_t lsb1;
+	uint16_t lsb2;
+	uint16_t lsb3;
+
 	float media;
+	uint16_t media_raw;
 
 } mensaje;
 
@@ -106,6 +114,7 @@ typedef struct
 {
 	RingbufHandle_t* rbuf_read; // puntero al buffer que lee de los sensores
 	RingbufHandle_t* rbuf_write; // puntero al buffer que escribe al monitor
+	uint16_t mask;
     // ...
 }task_votador_args_t;
 // Timeout de la tarea (ver system_task_stop)

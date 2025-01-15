@@ -73,7 +73,12 @@ SYSTEM_TASK(TASK_MONITOR)
 				v1 = msg.s1;
 				v2 = msg.s2;
 				v3 = msg.s3;
+				
+				// Muestra las temperaturas de los tres termistores
 				ESP_LOGI(TAG, "NORMAL_MODE: T1 = %.5f; T2 = %.5f; T3 = %.5f", v1, v2, v3);
+
+				// Muestra la media convertida a grados centigrados
+				ESP_LOGI(TAG, "NORMAL_MODE: Media = %.5f", (msg.media_raw* 3.3f / 4095.0f) );
 			}
 
 			vRingbufferReturnItem(*rbuf, ptr);
