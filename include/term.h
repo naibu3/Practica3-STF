@@ -42,22 +42,8 @@ float therm_read_v (therm_t thermistor);
 uint16_t therm_read_lsb(therm_t thermistor);
 void therm_up(therm_t thermistor);
 void therm_down(therm_t thermistor);
-// funciones útiles de conversión
-float _therm_v2t(float v);
-float _therm_lsb2v(uint16_t lsb);
+
+// Converion lsb a temperatura
+float convert_lsb_t(uint16_t lsb_value);
+
 #endif
-
-
-/*
-...
-therm_init();
-...
-therm_t termistor1;
-
-therm_config(&termistor1, CHANNEL_5);
-...
-float t1 = therm_read(termistor_1);
-...
-
-
-*/

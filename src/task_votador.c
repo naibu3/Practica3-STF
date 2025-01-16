@@ -39,21 +39,42 @@ SYSTEM_TASK(TASK_VOTADOR) {
         if (ptr_receive != NULL) {
             
             msg_received = *((mensaje*) ptr_receive);
-            ESP_LOGI(TAG, "Mensaje Recibido");
+            //ESP_LOGI(TAG, "Mensaje Recibido");
             
             media = (msg_received.s1 + msg_received.s2 + msg_received.s3) / 3.0;
 
-            R = (msg_received.lsb1 & msg_received.lsb2 & mask) |
-                (msg_received.lsb2 & msg_received.lsb3 & mask) | 
-                (msg_received.lsb1 & msg_received.lsb3 & mask);
+            R = (msg_received.lsb1 & msg_received.lsb2 ) |
+                (msg_received.lsb2 & msg_received.lsb3 ) | 
+                (msg_received.lsb1 & msg_received.lsb3 );
 
-            //R = R * 3.3f / 4095.0f;
+            msg_send.lsb1 = msg_received.lsb1;
+            msg_send.lsb2 = msg_received.lsb2;
+            msg_send.lsb3 = msg_received.lsb3;
 
             msg_send.media = media;
             msg_send.media_raw = R;
 
+            // COMPROBACIONES Y CAMBIO DE ESTADO
+            if (((msg_received.lsb1 & mask) != (msg_received.lsb2 & mask)) ||
+                ((msg_received.lsb2 & mask) != (msg_received.lsb3 & mask)) ||
+                ((msg_received.lsb1 & mask) != (msg_received.lsb3 & mask))) {
+                
+                ESP_LOGW(TAG, "Inconsistencia detectada entre las mediciones.");
+                
+                if ((msg_received.lsb1 & mask) != (msg_received.lsb2 & mask)) {
+                    ESP_LOGW(TAG, "Error en el sensor 1 detectado. Cambiando estado a SENSOR1_FAILURE.");
+                    SWITCH_ST_FROM_TASK(SENSOR1_FAILURE);
+                } else if ((msg_received.lsb2 & mask) != (msg_received.lsb3 & mask)) {
+                    ESP_LOGW(TAG, "Error en el sensor 2 detectado. Cambiando estado a SENSOR2_FAILURE.");
+                    SWITCH_ST_FROM_TASK(SENSOR2_FAILURE);
+                } else if ((msg_received.lsb1 & mask) != (msg_received.lsb3 & mask)) {
+                    ESP_LOGW(TAG, "Error en el sensor 3 detectado. Cambiando estado a SENSOR3_FAILURE.");
+                    SWITCH_ST_FROM_TASK(SENSOR3_FAILURE);
+                }
+            }
+
             // Log para depuración
-            ESP_LOGI(TAG, "Media calculada: %.2f", media);
+            //ESP_LOGI(TAG, "Media calculada: %.2f", media);
 
             // Preparar mensaje para Monitor
             if (xRingbufferSendAcquire(*rbuf_write, &ptr_send, sizeof(mensaje), pdMS_TO_TICKS(100)) != pdTRUE) {

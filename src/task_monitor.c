@@ -28,6 +28,7 @@
 
 // propias
 #include "config.h"
+#include "term.h"
 
 static const char *TAG = "STF_P1:task_monitor";
 
@@ -46,9 +47,9 @@ SYSTEM_TASK(TASK_MONITOR)
 	size_t length;
 	void *ptr;
 	mensaje msg;
-	float v1 = 0.0;
-	float v2 = 0.0;
-	float v3 = 0.0;
+	float lsb1 = 0.0;
+	float lsb2 = 0.0;
+	float lsb3 = 0.0;
 	//float deviation = 0.0;
 	//float min_val = 0.0;
 	//float max_val = 0.0;
@@ -64,21 +65,23 @@ SYSTEM_TASK(TASK_MONITOR)
 		//Si el timeout expira, este puntero es NULL
 		if (ptr != NULL) 
 		{
-			// Este código se puede usar para notificar cuántos bytes ha recibido del
-			// sensor a través de la estructura RingBuffer. 
-			//ESP_LOGI(TAG,"Recibidos: %d bytes", length);
-			msg = *((mensaje *) ptr);
 			
-			if (msg.uid == ID_SENSOR){
-				v1 = msg.s1;
-				v2 = msg.s2;
-				v3 = msg.s3;
+			msg = *((mensaje *) ptr);
+
+			if (msg.uid == ID_VOTADOR){
+				lsb1 = msg.lsb1;
+				lsb2 = msg.lsb2;
+				lsb3 = msg.lsb3;
+				
+				
 				
 				// Muestra las temperaturas de los tres termistores
-				ESP_LOGI(TAG, "NORMAL_MODE: T1 = %.5f; T2 = %.5f; T3 = %.5f", v1, v2, v3);
+				ESP_LOGI(TAG, "NORMAL_MODE: T1 = %.5f; T2 = %.5f; T3 = %.5f", convert_lsb_t(lsb1),
+																				convert_lsb_t(lsb2),
+																				convert_lsb_t(lsb3));
 
 				// Muestra la media convertida a grados centigrados
-				ESP_LOGI(TAG, "NORMAL_MODE: Media = %.5f", (msg.media_raw* 3.3f / 4095.0f) );
+				ESP_LOGI(TAG, "NORMAL_MODE: Media = %.5f", convert_lsb_t(msg.media_raw) );
 			}
 
 			vRingbufferReturnItem(*rbuf, ptr);

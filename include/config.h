@@ -34,7 +34,11 @@
 #define SYS_NAME "STF P1 System"
 enum{
 	INIT,
-    SENSOR_LOOP
+    SENSOR_LOOP,
+	SENSOR1_FAILURE,
+	SENSOR2_FAILURE,
+	SENSOR3_FAILURE,
+	TOTAL_FAILURE
 };
 
 // Configuración del termistor
@@ -46,7 +50,7 @@ enum{
 #define NOMINAL_TEMPERATURE 298.15    // 25°C en Kelvin
 #define BETA_COEFFICIENT 3950         // Constante B (ajustar según el termistor)
 
-#define THERM_MASK 0x00FF // Mascara para aplicar a las lecturas
+#define THERM_MASK 0x0000 // Mascara para aplicar a las lecturas
 
 // Configuración del buffer cíclico
 #define BUFFER_SIZE  2048

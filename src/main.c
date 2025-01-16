@@ -45,6 +45,10 @@ void app_main(void)
 	system_create(&sys_stf_p1, SYS_NAME);
 	system_register_state(&sys_stf_p1, INIT);
 	system_register_state(&sys_stf_p1, SENSOR_LOOP);
+	system_register_state(&sys_stf_p1, SENSOR1_FAILURE);
+	system_register_state(&sys_stf_p1, SENSOR2_FAILURE);
+	system_register_state(&sys_stf_p1, SENSOR3_FAILURE);
+	system_register_state(&sys_stf_p1, TOTAL_FAILURE);
 	system_set_default_state(&sys_stf_p1, INIT);
 
 
@@ -126,6 +130,37 @@ void app_main(void)
 			STATE_BEGIN();
 			// La máquina queda en este estado de forma indefinida. 
 			ESP_LOGI(TAG, "State: SENSOR_LOOP");
+			STATE_END();
+		}
+		STATE(SENSOR1_FAILURE)
+		{
+			STATE_BEGIN();
+			// La máquina queda en este estado de forma indefinida. 
+			ESP_LOGI(TAG, "State: SENSOR1_FAILURE");
+			STATE_END();
+		}
+		STATE(SENSOR2_FAILURE)
+		{
+			STATE_BEGIN();
+			// La máquina queda en este estado de forma indefinida. 
+			ESP_LOGI(TAG, "State: SENSOR2_FAILURE");
+			STATE_END();
+		}
+		STATE(SENSOR3_FAILURE)
+		{
+			STATE_BEGIN();
+			// La máquina queda en este estado de forma indefinida. 
+			ESP_LOGI(TAG, "State: SENSOR3_FAILURE");
+			STATE_END();
+		}
+		STATE(TOTAL_FAILURE)
+		{
+			STATE_BEGIN();
+			// La máquina queda en este estado de forma indefinida. 
+			ESP_LOGI(TAG, "State: ERROR");
+			system_task_stop(&sys_stf_p1, &task_votador, TASK_VOTADOR_TIMEOUT_MS);
+			system_task_stop(&sys_stf_p1, &task_sensor, TASK_SENSOR_TIMEOUT_MS);
+			system_task_stop(&sys_stf_p1, &task_monitor, TASK_MONITOR_TIMEOUT_MS);
 			STATE_END();
 		}
 		STATE_MACHINE_END();

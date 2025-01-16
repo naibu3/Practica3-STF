@@ -122,19 +122,23 @@ SYSTEM_TASK(TASK_SENSOR)
 			v1 = therm_read_t(t1);
 			msg.s1 = v1;
 			msg.lsb1 = therm_read_lsb(t1);
-			ESP_LOGI(TAG, "valor medido de s1 (pre buffer): %.5f", v1);
+			//ESP_LOGI(TAG, "valor medido de s1 (pre buffer): %.5f", v1);
+			//ESP_LOGI(TAG, "valor medido de lsb1 (pre buffer): %u", (unsigned int) msg.lsb1);
+			
 
 			// lectura del sensor 2
 			v2 = therm_read_t(t2);
-			ESP_LOGI(TAG, "valor medido de s2 (pre buffer): %.5f", v2);
 			msg.s2 = v2;
 			msg.lsb2 = therm_read_lsb(t2);
+			//ESP_LOGI(TAG, "valor medido de s2 (pre buffer): %.5f", v2);
+			//ESP_LOGI(TAG, "valor medido de lsb2 (pre buffer): %u", (unsigned int) msg.lsb2);
 
 			// lectura del sensor 3
 			v3 = therm_read_t(t3);
-			ESP_LOGI(TAG, "valor medido de s3 (pre buffer): %.5f", v3);
 			msg.s3 = v3;
 			msg.lsb3 = therm_read_lsb(t3);
+			//ESP_LOGI(TAG, "valor medido de s3 (pre buffer): %.5f", v3);
+			//ESP_LOGI(TAG, "valor medido de lsb3 (pre buffer): %u", (unsigned int) msg.lsb3);
 
 			// Uso del buffer cíclico entre la tarea monitor y sensor. Ver documentación en ESP-IDF
 			// Pide al RingBuffer espacio para escribir un float. 

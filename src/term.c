@@ -61,28 +61,36 @@ void therm_down(therm_t thermistor){
     ESP_ERROR_CHECK(gpio_set_level(thermistor.gpio_pin, 0));
 }
 
- // termistor 1
- therm_t t1;
- //ESP_ERROR_CHECK(therm_config(&t1, ADC_CHANNEL_6)); ESSTO VA AL SENSOR.C
+// termistor 1
+therm_t t1;
+//ESP_ERROR_CHECK(therm_config(&t1, ADC_CHANNEL_6)); ESSTO VA AL SENSOR.C
 
 
- //...
- // Lecturas
-  float therm_read_v(therm_t t1){
+//...
+// Lecturas
+float therm_read_v(therm_t t1){
     uint16_t raw = therm_read_lsb(t1);
     return ((raw) * 3.3f / 4095.0f);
- }
+}
 
- float therm_read_t( therm_t t1){
+float therm_read_t( therm_t t1){
     float v = therm_read_v(t1);
     float r_ntc = SERIES_RESISTANCE * (3.3 - v) / v;
-	float t_kelvin = 1.0f / (1.0f / NOMINAL_TEMPERATURE + (1.0f / BETA_COEFFICIENT) * log(r_ntc / NOMINAL_RESISTANCE));
-	// Resultado en grados centígrados
+    float t_kelvin = 1.0f / (1.0f / NOMINAL_TEMPERATURE + (1.0f / BETA_COEFFICIENT) * log(r_ntc / NOMINAL_RESISTANCE));
+    // Resultado en grados centígrados
     return(t_kelvin - 273.15f); 
- }
+}
 
- uint16_t therm_read_lsb(therm_t t1){
+float convert_lsb_t(uint16_t lsb_value){
+    float v = ((lsb_value) * 3.3f / 4095.0f);
+    float r_ntc = SERIES_RESISTANCE * (3.3 - v) / v;
+    float t_kelvin = 1.0f / (1.0f / NOMINAL_TEMPERATURE + (1.0f / BETA_COEFFICIENT) * log(r_ntc / NOMINAL_RESISTANCE));
+    // Resultado en grados centígrados
+    return(t_kelvin - 273.15f);
+}
+
+uint16_t therm_read_lsb(therm_t t1){
     int raw_value = 0;
     ESP_ERROR_CHECK(adc_oneshot_read(adc_hdlr, t1.adc_channel, &raw_value));
     return raw_value;
- }
+}
